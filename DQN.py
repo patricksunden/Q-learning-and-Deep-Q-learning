@@ -14,7 +14,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 
-
 filename="model_weights_400.h5"
 #DENSE is the basic layer form of the meural network
 
@@ -58,13 +57,11 @@ class DQN:
 		self.batch_size = 64
 
 
-
 	def load(self, name):
 		self.model = load_model(name)
 
 	def save(self, name):
 		self.model.save(name)
-
 
 	def epsilon_action(self, state):
 
@@ -76,9 +73,6 @@ class DQN:
 			action = self.model.predict(state)
 			return np.argmax(action[0])
 
-
-
-
 	def run(self):
 		try:
 			for iteration in range(1, self.iterations):
@@ -87,12 +81,11 @@ class DQN:
 				state = self.env.reset()
 				state = np.reshape(state, [1, self.state_space])
 				
-				
 				while not done: #done = true if a score of 200 is reached or the pole falls and the run is terminated
 					action = self.epsilon_action(state) #The output depends on the epsilon-hyperparameter
-					new_state, reward, done, info = self.env.step(action)#take a step every timestep
-					new_state = np.reshape(new_state, [1, self.state_space]) #TARKISTA
-					reward = reward if not done else -100 # Give a negative reward if the state is terminal
+					new_state, reward, done, info = self.env.step(action) #Take a step every timestep
+					new_state = np.reshape(new_state, [1, self.state_space]) 
+					reward = reward if not done else -100 #Give a negative reward if the state is terminal
 					self.memory.append((state, action, reward, new_state, done))#Remember state, action ,reward, new state and done for training purposes
 					state = new_state
 					if self.mean_score < 195 and len(self.memory) > self.batch_size:
@@ -100,8 +93,6 @@ class DQN:
 
 					index += 1# +1 reward for each step that is not terminal/done.
 					
-					
-
 				#Goes here when done == true
 				print("{} episode, score = {} , epsilon = {} , memory length = {}".format(iteration, index, self.epsilon, len(self.memory)))
 				self.scores.append(index)
@@ -123,7 +114,6 @@ class DQN:
 	def epsilon_update(self, x):
 		return max(self.epsilon_minimum, min(1.0, 1.0 - math.log10((x+1)/5)))
 
-
 	def training(self, iteration):
 
 		mini_batch = random.sample(self.memory, self.batch_size)
@@ -137,25 +127,16 @@ class DQN:
 			reward.append(mini_batch[i][2])
 			next_state[i] = mini_batch[i][3]  # next_state
 			done.append(mini_batch[i][4])
-
 		target = self.model.predict(current_state)
 		Qvalue_ns = self.model.predict(next_state)
-
-
+		
 		for i in range(self.batch_size):
 			if done[i]:
 				target[i][action[i]] = reward[i]
 			else:
 				target[i][action[i]] = reward[i] + self.discount_factor*(np.amax(Qvalue_ns[i]))
-				
 		self.model.fit(current_state, target, epochs = 1 , verbose = 0, batch_size=self.batch_size)
-
-
 		self.epsilon = self.epsilon_update(iteration)
-		
-
-
-		
 
 	def test(self):
 		self.load("model_weights_400.h5")
@@ -169,15 +150,12 @@ class DQN:
 				#self.env.render()
 				action = np.argmax(self.model.predict(state))
 				next_state, reward, done, _ = self.env.step(action)
-				
 				state = np.reshape(next_state, [1, self.state_space])
 				index += 1
-
 				if done:
 					#
 					self.plot_x.append(index) ##tarkista tämä seuraavan kerran kun ajat
 					self.plot_y.append(iteration)
-
 					#
 					if iteration == (self.iterations-1):
 						plot(self.plot_x, self.plot_y)	
@@ -185,9 +163,7 @@ class DQN:
 						print("average reward of the test: ", average_results)
 					average_reward += index
 					print("episode: {}/{}, score: {}".format(iteration, self.iterations, index))
-					
 					break
-
 
 if __name__ == "__main__":
 	agent = DQN()
